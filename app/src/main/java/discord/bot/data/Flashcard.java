@@ -12,16 +12,21 @@ public class Flashcard extends DataClass {
         return data.get(new Flashcard(id));
     }
 
+    private String deckID;
     private String question = "";
     private String answer = "";
 
-    final int TRUNCATED_LENGTH = 20;
+    final int TRUNCATED_LENGTH = 35;
 
     public String makeTruncatedQuestion() {
-        if (question.length() < TRUNCATED_LENGTH) {
+        if (question.length() <= TRUNCATED_LENGTH) {
             return question;
         }
         return question.substring(0, TRUNCATED_LENGTH) + "...";
+    }
+
+    public String getDeckID() {
+        return deckID;
     }
 
     public String getQuestion() {
@@ -32,12 +37,16 @@ public class Flashcard extends DataClass {
         return answer;
     }
 
-    public void setQuestion(String newQuestion) {
-        question = newQuestion;
+    public void setDeckID(String deckID) {
+        this.deckID = deckID;
     }
 
-    public void setAnswer(String newAnswer) {
-        answer = newAnswer;
+    public void setQuestion(String question) {
+        this.question = question;
+    }
+
+    public void setAnswer(String answer) {
+        this.answer = answer;
     }
 
     @Override

@@ -89,7 +89,7 @@ public class DeckSubhandler {
 
 		return event.replyModal(
 
-				Modal.create("flashcard-deck-update:" + deckID, "New Flashcard Deck")
+				Modal.create("flashcard-deck-update:" + deckID, "Update Flashcard Deck")
 						.addComponents(
 								Label.of("Operation",
 										StringSelectMenu.create("operation")

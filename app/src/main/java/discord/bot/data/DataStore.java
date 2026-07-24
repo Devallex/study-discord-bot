@@ -62,6 +62,11 @@ public class DataStore {
             return;
         }
 
+        if (object.getRawID() == null) {
+            System.out.println("Attempt to save object with null ID");
+            return;
+        }
+
         final String id = object.makeFullID();
         final String key = ClassPrefix + id;
 
@@ -88,13 +93,16 @@ public class DataStore {
 
         String json = get(key);
         if (json == null) {
+            object.setInitial(true);
             object.setup();
             return object;
         }
 
         ObjectMapper mapper = new ObjectMapper();
         try {
-            return (T) (mapper.readValue(json, object.getClass()));
+            object = (T) (mapper.readValue(json, object.getClass()));
+            object.setInitial(false);
+            return object;
         } catch (Exception e) {
             System.out.println("WARNING: Failed to retrieve DataClass " + key);
             System.out.print("Exception: ");
