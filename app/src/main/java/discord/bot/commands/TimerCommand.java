@@ -61,7 +61,7 @@ public class TimerCommand extends SlashCommand {
         String userID = event.getUser().getId();
 
         // <t:1784492700:R>
-        event.reply("Timer will go off " + "<t:" + totalSecondsString + ":R>" + String.valueOf(hours)).queue(hook -> {
+        event.reply("Timer will go off " + "<t:" + totalSecondsString + ":R>").queue(hook -> {
             scheduler.schedule(() -> {
                 hook.editOriginal("Timer completed!").queue();
                 hook.retrieveOriginal().queue(message -> {

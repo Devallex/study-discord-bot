@@ -13,13 +13,17 @@ import net.dv8tion.jda.api.interactions.commands.build.SubcommandGroupData;
 import net.dv8tion.jda.api.requests.restaction.interactions.InteractionCallbackAction;
 
 public class FlashcardCommand extends SlashCommand {
+
+	// Break up big command into smaller separated classes
 	private DeckSubhandler deckSubhandler = new DeckSubhandler();
 	private CardSubhandler cardSubhandler = new CardSubhandler();
+	private StudySubhandler studySubhandler = new StudySubhandler();
 
 	@Override
 	public void setup() {
 		deckSubhandler.data = data;
 		cardSubhandler.data = data;
+		studySubhandler.data = data;
 	}
 
 	@Override
@@ -61,12 +65,9 @@ public class FlashcardCommand extends SlashCommand {
 
 						new SubcommandGroupData("study", "Study your flashcards.")
 								.addSubcommands(
-										new SubcommandData("card",
-												"Study a single card."),
 										new SubcommandData("deck",
-												"Study a single deck, in a random order."),
-										new SubcommandData("delete",
-												"Delete an existing card.")));
+												"Study a single deck, in a random order.")
+												.addOptions(deckNameOption)));
 	}
 
 	@Override
@@ -92,6 +93,7 @@ public class FlashcardCommand extends SlashCommand {
 			case "flashcard card update":
 				reply = cardSubhandler.handleCardUpdate(event);
 				break;
+			// case "flashcard study deck":
 		}
 
 		reply.queue();
