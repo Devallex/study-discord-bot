@@ -1,0 +1,1 @@
+- Create a file called `discord.secret` in the root directory (sibling to this README.md file). Set it to Discord bot token.
