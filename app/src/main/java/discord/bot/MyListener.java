@@ -6,6 +6,10 @@ import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEve
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 
+/* 
+UNUSED DEMO CODE
+*/
+
 public class MyListener extends ListenerAdapter {
     @Override
     public void onMessageReceived(MessageReceivedEvent event) {

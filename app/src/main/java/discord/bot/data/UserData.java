@@ -27,6 +27,20 @@ public class UserData extends DataClass {
         return deckIDs;
     }
 
+    public ArrayList<Flashcard> makeAllFlashcards(DataStore data) {
+        final ArrayList<Flashcard> cards = new ArrayList<Flashcard>();
+
+        for (String deckID : getDeckIDs()) {
+            FlashcardDeck deck = FlashcardDeck.acquire(data, deckID);
+
+            for (String cardID : deck.getCardIDs()) {
+                cards.add(Flashcard.acquire(data, cardID));
+            }
+        }
+
+        return cards;
+    }
+
     public void setDeckIDs(ArrayList<String> deckIDs) {
         this.deckIDs = deckIDs;
     }

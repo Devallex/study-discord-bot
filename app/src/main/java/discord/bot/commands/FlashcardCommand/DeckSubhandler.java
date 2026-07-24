@@ -50,7 +50,7 @@ public class DeckSubhandler {
 	}
 
 	public InteractionCallbackAction<?> handleDeckView(SlashCommandInteractionEvent event) {
-		final String deckID = event.getOption("name").getAsString();
+		final String deckID = event.getOption("deck-name").getAsString();
 		final FlashcardDeck deck = FlashcardDeck.acquire(data, deckID);
 
 		String description = deck.getDescription();
@@ -60,16 +60,17 @@ public class DeckSubhandler {
 
 		return event.reply(String.format("""
 				Name: **%s**
+				Card Count: **`%d`**
 				Description:
 				```
 				%s
 				```
 				(ID: `%s`)
-				""", deck.getName(), description, deckID));
+				""", deck.getName(), deck.countCards(), description, deckID));
 	}
 
 	public InteractionCallbackAction<?> handleDeckUpdate(SlashCommandInteractionEvent event) {
-		final String deckID = event.getOption("name").getAsString();
+		final String deckID = event.getOption("deck-name").getAsString();
 		final FlashcardDeck deck = FlashcardDeck.acquire(data, deckID);
 
 		Builder descriptionTextInputBuilder = TextInput.create("description",
@@ -138,7 +139,6 @@ public class DeckSubhandler {
 			data.push(user, deck);
 
 			event.reply(String.format("Created deck **%s**!", name)).queue();
-			;
 		} else if (modalID.startsWith("flashcard-deck-update:")) {
 			deckID = modalID.split(":")[1];
 			deck = FlashcardDeck.acquire(data, deckID);
