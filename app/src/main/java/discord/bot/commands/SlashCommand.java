@@ -5,11 +5,14 @@ import org.jetbrains.annotations.NotNull;
 import com.google.errorprone.annotations.ForOverride;
 
 import discord.bot.data.DataStore;
+import discord.bot.data.MessageData;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
+import net.dv8tion.jda.api.interactions.components.buttons.ButtonInteraction;
 
 /* 
 Abstract class which other SlashCommands are made from.
@@ -46,6 +49,10 @@ public abstract class SlashCommand {
     public void handleModal(@NotNull ModalInteractionEvent event) {
         // Override to handle modal responses
         // Requires the modals to have modalIDs specifed in getModalIDs()
+    }
+
+    public void handleButton(@NotNull MessageData message, @NotNull ButtonInteractionEvent event) {
+        // Override to handle command button interactions
     }
 
     public void handleAutoComplete(@NotNull CommandAutoCompleteInteractionEvent event) {

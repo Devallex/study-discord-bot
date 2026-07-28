@@ -1,183 +1,142 @@
 package discord.bot.commands.FlashcardCommand;
 
 import java.util.ArrayList;
-
 import discord.bot.data.DataStore;
 import discord.bot.data.Flashcard;
-import discord.bot.data.FlashcardDeck;
-import discord.bot.data.UserData;
-import net.dv8tion.jda.api.components.label.Label;
-import net.dv8tion.jda.api.components.selections.SelectOption;
-import net.dv8tion.jda.api.components.selections.StringSelectMenu;
-import net.dv8tion.jda.api.components.textinput.TextInput;
-import net.dv8tion.jda.api.components.textinput.TextInputStyle;
+import discord.bot.data.MessageData;
+import discord.bot.data.StudySession;
+import net.dv8tion.jda.api.components.actionrow.ActionRow;
+import net.dv8tion.jda.api.components.buttons.Button;
+import net.dv8tion.jda.api.entities.emoji.Emoji;
+import net.dv8tion.jda.api.events.Event;
+import net.dv8tion.jda.api.events.interaction.GenericInteractionCreateEvent;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.command.GenericCommandInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.interactions.AutoCompleteQuery;
-import net.dv8tion.jda.api.interactions.commands.Command.Choice;
-import net.dv8tion.jda.api.modals.Modal;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
+import net.dv8tion.jda.api.interactions.InteractionHook;
+import net.dv8tion.jda.api.interactions.callbacks.IReplyCallback;
 import net.dv8tion.jda.api.requests.restaction.interactions.InteractionCallbackAction;
 
 public class StudySubhandler {
-    public DataStore data;
+	public DataStore data;
 
-    // region Slash Command
-    public InteractionCallbackAction<?> handleCardNew(SlashCommandInteractionEvent event) {
-        return event.replyModal(
-                Modal.create("flashcard-card-new:" + event.getOption("deck-name").getAsString(),
-                        "New Flashcard")
-                        .addComponents(
-                                Label.of(
-                                        "Question",
-                                        TextInput.create("question",
-                                                TextInputStyle.PARAGRAPH)
-                                                .setMinLength(1)
-                                                .setMaxLength(500)
-                                                .setRequired(true)
-                                                .build()),
+	// region Slash Command
+	public void handleStudyNew(SlashCommandInteractionEvent event) {
+		StudySession session = new StudySession(data.randomID());
 
-                                Label.of(
-                                        "Answer",
-                                        TextInput.create("answer",
-                                                TextInputStyle.PARAGRAPH)
-                                                .setMinLength(1)
-                                                .setMaxLength(500)
-                                                .setRequired(true)
-                                                .build()))
+		final String deckID = event.getOption("deck-name").getAsString();
+		session.setDeckID(deckID);
+		session.setupDeck(data);
 
-                        .build());
-    }
+		replyWithCard(session, event);
 
-    public InteractionCallbackAction<?> handleCardView(SlashCommandInteractionEvent event) {
-        final String cardID = event.getOption("card-name").getAsString();
-        final Flashcard card = Flashcard.acquire(data, cardID);
+	}
+	// endregion
 
-        final String question = card.getQuestion();
-        final String answer = card.getAnswer();
+	private void replyWithCard(StudySession session, IReplyCallback event) {
+		Flashcard card = session.makeNextCard(data);
 
-        return event.reply(String.format("""
-                **Flashcard**
-                Question: ```%s```
-                Answer: ||```%s```||
-                (ID: `%s`)
-                """, question, answer, cardID));
-    }
+		if (card == null) {
+			final String deckName = session.acquireDeck(data).getName();
 
-    public InteractionCallbackAction<?> handleCardUpdate(SlashCommandInteractionEvent event) {
-        final String cardID = event.getOption("card-name").getAsString();
-        final Flashcard card = Flashcard.acquire(data, cardID);
+			session.delete();
+			data.push(session);
 
-        SelectOption updateOption = SelectOption.of("Update", "update");
-        SelectOption deleteOption = SelectOption.of("Delete", "delete");
+			if (session.countTotalCards() == 0) {
+				// System.out.println("THERE ARE NO CARDS #####");
+				// System.out.println(session.getCardIndex());
+				// System.out.println(session.getMessageID());
+				// System.out.println(session.get());
+				event.reply(String.format(
+						"""
+								There are no cards in the deck **`%s`**, try to add some!
+								""", deckName)).queue();
 
-        return event.replyModal(
+				return;
+			}
 
-                Modal.create("flashcard-card-update:" + cardID, "Update Flashcard")
-                        .addComponents(
-                                Label.of("Operation",
-                                        StringSelectMenu.create("operation")
-                                                .addOptions(updateOption,
-                                                        deleteOption)
-                                                .setDefaultOptions(
-                                                        updateOption)
-                                                .setRequired(true)
-                                                .build()),
-                                Label.of(
-                                        "Question",
-                                        TextInput.create("question",
-                                                TextInputStyle.PARAGRAPH)
-                                                .setMinLength(1)
-                                                .setMaxLength(500)
-                                                .setRequired(true)
-                                                .setValue(card.getQuestion())
-                                                .build()),
+			System.out.print(session.calculateAccuracy());
 
-                                Label.of(
-                                        "Answer",
-                                        TextInput.create("answer",
-                                                TextInputStyle.PARAGRAPH)
-                                                .setMinLength(1)
-                                                .setMaxLength(500)
-                                                .setRequired(true)
-                                                .setValue(card.getAnswer())
-                                                .build()))
-                        .build());
-    }
+			event.reply(String.format("""
+					**You finished studying!**
+					Deck Name: ***%s***
+					Cards Studied: `%d`
 
-    // endregion
+					Correct: `%d` :white_check_mark:
+					Incorrect: `%d` :x:
 
-    // region Modal
-    public void handleModal(ModalInteractionEvent event) {
-        final Flashcard card;
-        final String cardID;
+					Accuracy: **`%.2f%%`**
+					""",
+					deckName,
+					session.countTotalCards(),
+					session.getCorrect(),
+					session.getIncorrect(),
+					session.calculateAccuracy()))
+					.queue();
+			;
+			return;
+		}
 
-        final String modalID = event.getModalId();
+		event.reply(
+				String.format("""
+						**Flashcard (%d/%d)**
+						Question: ```%s```
+						Answer: ||```%s```||
+						""",
+						session.countTotalSoFar() + 1,
+						session.countTotalCards(),
+						card.getQuestion(),
+						card.getAnswer()))
+				.addComponents(ActionRow.of(
+						Button.success("correct", "Correct").withEmoji(Emoji.fromFormatted("👍")),
+						Button.danger("incorrect", "Incorrect").withEmoji(Emoji.fromFormatted("👎"))))
+				.queue(hook -> {
+					hook.retrieveOriginal().queue(message -> {
+						MessageData msg = MessageData.acquire(data, message);
+						msg.setStudySessionID(session.getRawID());
+						session.setMessageID(msg.getRawID());
+						data.push(session, msg);
+					});
+				});
+	}
 
-        if (modalID.startsWith("flashcard-card-new:")) {
-            String deckID = modalID.split(":")[1];
-            FlashcardDeck deck = FlashcardDeck.acquire(data, deckID);
+	// region Button
+	public void handleButton(MessageData message, ButtonInteractionEvent event) {
+		String studySessionID = message.getStudySessionID();
+		if (studySessionID == null) {
+			return;
+		}
 
-            String question = event.getValue("question").getAsString();
-            String answer = event.getValue("answer").getAsString();
+		StudySession session = StudySession.acquire(data, studySessionID);
 
-            card = new Flashcard(data.randomID());
-            card.setDeckID(deck.getRawID());
-            card.setQuestion(question);
-            card.setAnswer(answer);
+		final String componentId = event.getComponentId();
 
-            deck.addFlashcard(card);
+		if (componentId.equals("correct")) {
+			session.setCorrect(session.getCorrect() + 1);
+		} else if (componentId.equals("incorrect")) {
 
-            data.push(deck, card);
+			session.setIncorrect(session.getIncorrect() + 1);
+		} else {
+			event.reply("Invalid interaction!").setEphemeral(true).queue();
+			return;
+		}
 
-            event.reply(String.format("Created card **%s**!", card.makeTruncatedQuestion())).queue();
-        } else if (modalID.startsWith("flashcard-card-update:")) {
-            cardID = modalID.split(":")[1];
-            card = Flashcard.acquire(data, cardID);
+		event.getMessage().editMessageComponents(ActionRow.of(
+				Button.success("correct", "Correct").withEmoji(Emoji.fromFormatted("👍")).asDisabled(),
+				Button.danger("incorrect", "Incorrect").withEmoji(Emoji.fromFormatted("👎")))
+				.asDisabled()).queue();
 
-            if (event.getValue("operation").getAsStringList().get(0).equals("delete")) {
-                FlashcardDeck deck = FlashcardDeck.acquire(data, card.getDeckID());
+		if (!session.checkMessageUpToDate(message)) {
+			event.reply(
+					"You are replying on an old message.")
+					.setEphemeral(true)
+					.queue();
+			return;
+		}
 
-                deck.removeFlashcard(card);
-                card.delete();
-                data.push(deck, card);
-
-                event.reply(String.format("Deleted card **%s**", card.makeTruncatedQuestion())).queue();
-                return;
-            }
-
-            card.setQuestion(event.getValue("question").getAsString());
-            card.setAnswer(event.getValue("answer").getAsString());
-
-            data.push(card);
-            event.reply(String.format("Updated card **%s**", card.makeTruncatedQuestion())).queue();
-            ;
-        }
-    }
-    // endregion
-
-    // region Autocomplete
-    public void handleAutoComplete(CommandAutoCompleteInteractionEvent event) {
-        UserData user = UserData.acquire(data, event);
-
-        final AutoCompleteQuery option = event.getFocusedOption();
-        final String optionValue = option.getValue().toLowerCase();
-
-        ArrayList<Choice> choices = new ArrayList<Choice>();
-        for (Flashcard card : user.makeAllFlashcards(data)) {
-            final String question = card.getQuestion().toLowerCase();
-            final String answer = card.getAnswer().toLowerCase();
-
-            // If searching doesn't exclude this item
-            if (question.contains(optionValue)
-                    || answer.contains(optionValue)) {
-                if (card.isInitial()) {
-                    continue;
-                }
-                choices.add(new Choice(card.makeTruncatedQuestion(), card.getRawID()));
-            }
-        }
-        event.replyChoices(choices).queue();
-    }
-    // endregion
+		replyWithCard(session, event);
+	}
+	// endregion
 }

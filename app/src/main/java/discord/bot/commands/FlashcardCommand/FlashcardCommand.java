@@ -1,9 +1,11 @@
 package discord.bot.commands.FlashcardCommand;
 
 import discord.bot.commands.SlashCommand;
+import discord.bot.data.MessageData;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
@@ -93,10 +95,16 @@ public class FlashcardCommand extends SlashCommand {
 			case "flashcard card update":
 				reply = cardSubhandler.handleCardUpdate(event);
 				break;
-			// case "flashcard study deck":
+			case "flashcard study deck":
+				// Runs its own queue to hook
+				studySubhandler.handleStudyNew(event);
+				reply = null;
+				break;
 		}
 
-		reply.queue();
+		if (reply != null) {
+			reply.queue();
+		}
 	}
 
 	@Override
@@ -120,10 +128,17 @@ public class FlashcardCommand extends SlashCommand {
 	}
 
 	@Override
+	public void handleButton(MessageData message, ButtonInteractionEvent event) {
+		studySubhandler.handleButton(message, event);
+	}
+
+	@Override
 	public void handleAutoComplete(CommandAutoCompleteInteractionEvent event) {
 		final String fullCommand = event.getFullCommandName();
 
-		if (fullCommand.startsWith("flashcard deck") || fullCommand.equals("flashcard card new")) {
+		if (fullCommand.startsWith("flashcard deck")
+				|| fullCommand.startsWith("flashcard study")
+				|| fullCommand.equals("flashcard card new")) {
 			deckSubhandler.handleAutoComplete(event);
 			return;
 		} else if (fullCommand.startsWith("flashcard card")) {

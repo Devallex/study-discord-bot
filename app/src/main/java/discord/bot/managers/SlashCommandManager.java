@@ -9,10 +9,12 @@ import org.jetbrains.annotations.NotNull;
 
 import discord.bot.commands.SlashCommand;
 import discord.bot.data.DataStore;
+import discord.bot.data.MessageData;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.events.interaction.ModalInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.CommandAutoCompleteInteractionEvent;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.commands.build.SlashCommandData;
 
@@ -24,6 +26,7 @@ public class SlashCommandManager extends BaseManager {
 
     private class SlashCommandListener extends ListenerAdapter {
         public ArrayList<SlashCommand> slashCommands;
+        public DataStore data;
 
         @Override
         public void onSlashCommandInteraction(@NotNull SlashCommandInteractionEvent event) {
@@ -71,6 +74,16 @@ public class SlashCommandManager extends BaseManager {
                 return;
             }
         }
+
+        @Override
+        public void onButtonInteraction(ButtonInteractionEvent event) {
+            MessageData message = MessageData.acquire(data, event.getMessage());
+
+            for (SlashCommand command : slashCommands) {
+                // Every event handles button events; must choose to ignore based on message
+                command.handleButton(message, event);
+            }
+        }
     }
 
     public void add(SlashCommand... scs) {
@@ -84,6 +97,7 @@ public class SlashCommandManager extends BaseManager {
     public void start(JDA api, DataStore data) {
         listener.slashCommands = slashCommands;
 
+        listener.data = data;
         for (SlashCommand cmd : slashCommands) {
             cmd.data = data;
             cmd.setup();

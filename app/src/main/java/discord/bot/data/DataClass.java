@@ -14,6 +14,7 @@ public class DataClass {
 
     public void delete() {
         deleted = true;
+        // When being pushed, data store knows not to save it
     }
 
     @ForOverride
