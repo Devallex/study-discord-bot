@@ -30,8 +30,6 @@ public class App {
 				.enableIntents(EnumSet.allOf(GatewayIntent.class))
 				.build();
 
-		api.addEventListener(new MyListener());
-
 		DataStore data = new DataStore();
 
 		SlashCommandManager slashCommandManager = new SlashCommandManager();
