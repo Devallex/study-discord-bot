@@ -41,7 +41,7 @@ public class App {
 		System.out.println("Setting up slash commands...");
 
 		slashCommandManager.add(
-				new MyCommand(),
+				// new MyCommand(), // Unused
 				new TimerCommand(),
 				new FlashcardCommand(),
 				new DataBaseCommand());
