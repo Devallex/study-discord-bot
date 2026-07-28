@@ -26,13 +26,19 @@ public class App {
 	public void setupBot() {
 		String secret = getSecret();
 
+		System.out.println(longHeader);
+		System.out.println("Setting up bot...");
+
 		JDA api = JDABuilder.createDefault(secret)
 				.enableIntents(EnumSet.allOf(GatewayIntent.class))
 				.build();
 
+		System.out.println("Setting up data store...");
 		DataStore data = new DataStore();
 
 		SlashCommandManager slashCommandManager = new SlashCommandManager();
+
+		System.out.println("Setting up slash commands...");
 
 		slashCommandManager.add(
 				new MyCommand(),
@@ -40,18 +46,22 @@ public class App {
 				new FlashcardCommand(),
 				new DataBaseCommand());
 		slashCommandManager.start(api, data);
+
+		System.out.println(longHeader);
+		System.out.println("Started managers! The bot should be running.");
+		System.out.println(longHeader);
 	}
 
-	final String fatalHeader = ("#").repeat(50);
+	final String longHeader = ("#").repeat(50);
 
 	public void fatal(String message) {
 
-		System.out.println(fatalHeader);
+		System.out.println(longHeader);
 		System.out.println(" IMPORTANT <---");
-		System.out.println(fatalHeader);
+		System.out.println(longHeader);
 		System.out.println(message);
-		System.out.println(fatalHeader);
-		System.exit(1);
+		System.out.println(longHeader);
+		System.exit(0);
 	}
 
 	public String getSecret() {
