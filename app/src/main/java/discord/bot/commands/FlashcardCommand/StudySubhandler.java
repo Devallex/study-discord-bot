@@ -75,7 +75,6 @@ public class StudySubhandler {
 					session.getIncorrect(),
 					session.calculateAccuracy()))
 					.queue();
-			;
 			return;
 		}
 

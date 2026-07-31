@@ -47,7 +47,7 @@ public class DataClass {
         this.initial = initial;
     }
 
-    public DataClass() {
+    public DataClass() { // For JSON deserialization
     }
 
     // Called when getting a null DataClass.

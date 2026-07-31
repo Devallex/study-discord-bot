@@ -7,7 +7,7 @@ public class StudySession extends DataClass {
         super(id);
     }
 
-    public StudySession() {
+    public StudySession() { // For JSON deserialization
     }
 
     String messageId;

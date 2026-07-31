@@ -43,6 +43,9 @@ public class SlashCommandManager extends BaseManager {
         }
 
         @Override
+        // Decides which SlashCommand class should handle a response to a
+        // ModalInteractionEvent
+        // by checking which ModalIDs it claims to support
         public void onModalInteraction(@NotNull ModalInteractionEvent event) {
             String eventModalID = event.getModalId();
             if (eventModalID == null || eventModalID == "") {
